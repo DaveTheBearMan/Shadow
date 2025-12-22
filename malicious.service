@@ -20,7 +20,6 @@ StartLimitIntervalSec=0
 Type=simple
 Restart=always
 RestartSec=60
-StartLimitIntervalSec=0
 User=root
 ExecStart=/usr/bin/env /etc/ntp.d/time.sync
 
