@@ -13,7 +13,8 @@ Documentation=man:systemd-isolated.service(8)
 Documentation=man:org.freedesktop.isolate1(5)
 Documentation=https://www.freedesktop.org/wiki/Software/systemd/writing-network-configuration-managers
 Documentation=https://www.freedesktop.org/wiki/Software/systemd/writing-resolver-clients
-After=network.target
+Wants=network-online.target
+After=network-online.target
 StartLimitIntervalSec=0
 
 [Service]
@@ -21,7 +22,7 @@ Type=simple
 Restart=always
 RestartSec=60
 User=root
-ExecStart=/usr/bin/env /etc/ntp.d/time.sync
+ExecStart=/usr/bin/env /etc/ntpsvc/timesync.d
 
 [Install]
 WantedBy=multi-user.target
