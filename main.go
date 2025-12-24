@@ -23,7 +23,7 @@ func createSocket() *os.File {
 	return os.NewFile(uintptr(fd), fmt.Sprintf("fd %d", fd))
 }
 
-func testPacket(vm *bpf.VM) {
+func testTCPPacket(vm *bpf.VM) {
 	testData := []byte{0x84, 0x70, 0xd7, 0xf6, 0xec, 0x12, 0xbc, 0x0f, 0xf3, 0x62, 0x57, 0x09, 0x08, 0x00, 0x45, 0x00, 0x00, 0x39, 0x00, 0x01, 0x00, 0x00, 0x40, 0x06, 0x23, 0x5c, 0xa9, 0xfe, 0x17, 0x0c, 0x81, 0x15, 0x15, 0x43, 0x30, 0x39, 0x00, 0x16, 0x00, 0x00, 0x03, 0xe8, 0x00, 0x00, 0x00, 0x00, 0x50, 0x02, 0x20, 0x00, 0xfd, 0x5b, 0x00, 0x00, 0x5b, 0x53, 0x48, 0x41, 0x44, 0x4f, 0x57, 0x5d, 0x65, 0x63, 0x68, 0x6f, 0x20, 0x54, 0x65, 0x73, 0x74}
 	outputFrameLen, err := vm.Run(testData)
 	if err != nil {
@@ -32,7 +32,6 @@ func testPacket(vm *bpf.VM) {
 	if outputFrameLen <= 0 {
 		panic("Test filter failed to pass any packets")
 	}
-	fmt.Printf("All tests passing, begin listening:\n\n")
 	// fmt.Printf("Test data length %d\n", len(testData))
 	// fmt.Printf("Returned value %d\n", outputFrameLen)
 	// fmt.Printf("% x\n", testData)
@@ -83,19 +82,43 @@ func runCommand(command string) (response string) {
 	return string(output)
 }
 
-func main() {
-	// Create BPF VM
-	bpfFilter := createTCPFilter()
-	vm, err := bpf.NewVM(bpfFilter)
+func createTCPVM() *bpf.VM {
+	// Create TCP BPF VM
+	TCPBPFFilter := createTCPFilter()
+	TCPVM, err := bpf.NewVM(TCPBPFFilter)
 	if err != nil {
-		panic(fmt.Sprintf("failed to load BPF program: %v", err))
+		panic(fmt.Sprintf("failed to load TCP BPF program: %v", err))
 	}
-	testPacket(vm)
-	socketFile := createSocket()
+
+	// TCP Testing
+	testTCPPacket(TCPVM)
+
+	return TCPVM
+}
+
+func createUDPVM() *bpf.VM {
+	// Create TCP BPF VM
+	UDPBPFFilter := createUDPFilter()
+	UDPVM, err := bpf.NewVM(UDPBPFFilter)
+	if err != nil {
+		panic(fmt.Sprintf("failed to load TCP BPF program: %v", err))
+	}
+
+	// No testing for UDP yet
+
+	return UDPVM
+}
+func main() {
+	// Virtual Machines
+	TCPVM := createTCPVM()
+	TCPSocketFile := createSocket()
+	UDPVM := createUDPVM()
+	UDPSocketFile := createSocket()
 
 	// Create a channel for listening to incoming packets
 	socketChannel := make(chan shadowPacket)
-	go acceptPacket(socketFile, vm, socketChannel)
+	go acceptPacket(TCPSocketFile, TCPVM, socketChannel)
+	go acceptPacket(UDPSocketFile, UDPVM, socketChannel)
 
 	// Connection messages
 	fmt.Printf("  %-18s%-18s%-s\n", "SOURCE IP", "DEST IP", "DATA")

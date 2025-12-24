@@ -106,7 +106,7 @@ func createUDPFilter() []bpf.Instruction {
 		bpf.LoadAbsolute{Off: ethTypeOff, Size: ethTypeSize},
 		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: ethIPv4, SkipTrue: 7},
 
-		// If Ip Proto is not Udp, drop packet
+		// If EtherType is not Udp, drop packet
 		bpf.LoadAbsolute{Off: ipProtoOff, Size: ipProtoSize},
 		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: protoUDP, SkipTrue: 5},
 
@@ -115,9 +115,9 @@ func createUDPFilter() []bpf.Instruction {
 		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: hiHeader, SkipTrue: 3},
 		bpf.LoadAbsolute{Off: loData, Size: dataSize},
 		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: loHeader, SkipTrue: 1},
-		bpf.RetConstant{Val: 0},
 
-		bpf.RetConstant{Val: 50}, // Data starts at 50 after our header
+		bpf.RetConstant{Val: 50}, // Accept
+		bpf.RetConstant{Val: 0},  // Lightly optimized decline
 	}
 }
 
