@@ -117,7 +117,7 @@ func createUDPFilter() []bpf.Instruction {
 		bpf.JumpIf{Cond: bpf.JumpNotEqual, Val: loHeader, SkipTrue: 1},
 		bpf.RetConstant{Val: 0},
 
-		bpf.RetConstant{Val: 1500}, // Accept
+		bpf.RetConstant{Val: 50}, // Data starts at 50 after our header
 	}
 }
 
