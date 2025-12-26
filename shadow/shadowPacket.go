@@ -12,7 +12,8 @@ type shadowPacket struct {
 	destMac  []byte
 
 	// Transaction
-	data []byte
+	proto string
+	data  []byte
 }
 
 func (sp shadowPacket) getSourceAddrStr() string {
