@@ -23,3 +23,19 @@ func (sp ShadowPacket) GetSourceAddrStr() string {
 func (sp ShadowPacket) GetDestAddrStr() string {
 	return fmt.Sprintf("%d.%d.%d.%d", sp.destAddr[0], sp.destAddr[1], sp.destAddr[2], sp.destAddr[3])
 }
+
+func (sp ShadowPacket) GetSourceMacAddr() []byte {
+	return sp.sourceMac
+}
+
+func (sp ShadowPacket) GetDestMacAddr() []byte {
+	return sp.destMac
+}
+
+func (sp ShadowPacket) GetPayload() []byte {
+	return sp.data
+}
+
+func (sp ShadowPacket) GetProtocol() string {
+	return sp.proto
+}
