@@ -1,69 +1,18 @@
-package main
+package shadow
 
 import (
-	"bufio"
 	"encoding/binary"
-	"errors"
-	"net"
-	"os"
-	"strings"
 
 	"golang.org/x/net/bpf"
 )
 
-func htons(i uint16) uint16 {
-	b := make([]byte, 2)
-	binary.LittleEndian.PutUint16(b, i)
-	return binary.BigEndian.Uint16(b)
-}
-
-// This is some AI nonsense, but I prompted it to
-// find the interface regardless of whether or not
-// something like net.Dial(8.8.8.8:80) would work,
-// in other words, we dont need to do any connecting
-// to make sure that we can get the outward interface
-func getOutwardIface() ([]byte, error) {
-	// Open net route file
-	f, err := os.Open("/proc/net/route")
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	// Open scanner
-	sc := bufio.NewScanner(f)
-	if !sc.Scan() { // header
-		return nil, errors.New("empty /proc/net/route")
-	}
-
-	// Iterate until we find an interface who owns the default route
-	for sc.Scan() {
-		fields := strings.Fields(sc.Text())
-		if len(fields) < 2 {
-			continue
-		}
-		ifaceName := fields[0]
-		dest := fields[1]
-		if dest == "00000000" { // default route
-			ifc, err := net.InterfaceByName(ifaceName)
-			if err != nil {
-				return nil, err
-			}
-
-			return ifc.HardwareAddr, nil
-		}
-	}
-	if err := sc.Err(); err != nil {
-		return nil, err
-	}
-	return nil, errors.New("no default route found")
-}
-
 func createUDPFilter() []bpf.Instruction {
-	outwardMac, err := getOutwardIface()
+	outwardInterface, err := getOutwardIface()
 	if err != nil {
 		panic("Unable to get outward iface. Does ens3 match existing drivers?")
 	}
+	outwardMac := outwardInterface.HardwareAddr
+
 	highValue := binary.BigEndian.Uint32(outwardMac[0:4]) // High bits (Val supports 32 bits only)
 	lowValue := binary.BigEndian.Uint16(outwardMac[4:6])  // Low bits
 
@@ -122,10 +71,12 @@ func createUDPFilter() []bpf.Instruction {
 }
 
 func createTCPFilter() []bpf.Instruction {
-	outwardMac, err := getOutwardIface()
+	outwardInterface, err := getOutwardIface()
 	if err != nil {
 		panic("Unable to get outward iface. Does ens3 match existing drivers?")
 	}
+	outwardMac := outwardInterface.HardwareAddr
+
 	highValue := binary.BigEndian.Uint32(outwardMac[0:4])
 	lowValue := binary.BigEndian.Uint16(outwardMac[4:6])
 
@@ -192,4 +143,18 @@ func createTCPFilter() []bpf.Instruction {
 		bpf.ALUOpConstant{Op: bpf.ALUOpAdd, Val: 8},
 		bpf.RetA{}, // Return beginning index of data within the packet
 	}
+}
+
+func testTCPFilter(vm *bpf.VM) {
+	testData := []byte{0x84, 0x70, 0xd7, 0xf6, 0xec, 0x12, 0xbc, 0x0f, 0xf3, 0x62, 0x57, 0x09, 0x08, 0x00, 0x45, 0x00, 0x00, 0x39, 0x00, 0x01, 0x00, 0x00, 0x40, 0x06, 0x23, 0x5c, 0xa9, 0xfe, 0x17, 0x0c, 0x81, 0x15, 0x15, 0x43, 0x30, 0x39, 0x00, 0x16, 0x00, 0x00, 0x03, 0xe8, 0x00, 0x00, 0x00, 0x00, 0x50, 0x02, 0x20, 0x00, 0xfd, 0x5b, 0x00, 0x00, 0x5b, 0x53, 0x48, 0x41, 0x44, 0x4f, 0x57, 0x5d, 0x65, 0x63, 0x68, 0x6f, 0x20, 0x54, 0x65, 0x73, 0x74}
+	outputFrameLen, err := vm.Run(testData)
+	if err != nil {
+		panic("Test filter failed")
+	}
+	if outputFrameLen <= 0 {
+		panic("Test filter failed to pass any packets")
+	}
+	// fmt.Printf("Test data length %d\n", len(testData))
+	// fmt.Printf("Returned value %d\n", outputFrameLen)
+	// fmt.Printf("% x\n", testData)
 }

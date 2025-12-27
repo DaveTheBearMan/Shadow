@@ -1,4 +1,4 @@
-package main
+package shadow
 
 import (
 	"bytes"
@@ -7,13 +7,14 @@ import (
 	"syscall"
 
 	"golang.org/x/net/bpf"
+	"golang.org/x/sys/unix"
 )
 
 var (
 	mtu = 1500
 )
 
-func createSocket() *os.File {
+func CreateRecieveSocket() *os.File {
 	// Get a file descriptor and open a raw socket for all incoming packets
 	fd, err := syscall.Socket(syscall.AF_PACKET, syscall.SOCK_RAW, int(htons(syscall.ETH_P_ALL)))
 	if err != nil {
@@ -21,8 +22,21 @@ func createSocket() *os.File {
 	}
 	return os.NewFile(uintptr(fd), fmt.Sprintf("fd %d", fd))
 }
+func CreateSendSocket() (fd int) {
+	fd, err := unix.Socket(unix.AF_INET, unix.SOCK_RAW, unix.IPPROTO_RAW)
+	if err != nil {
+		panic(err)
+	}
 
-func acceptPacket(socketFile *os.File, vm *bpf.VM, socketProtocol string, packetChannel chan shadowPacket) error {
+	// If you provide your own IPv4 header, you typically need IP_HDRINCL:
+	if err := unix.SetsockoptInt(fd, unix.IPPROTO_IP, unix.IP_HDRINCL, 1); err != nil {
+		panic(err)
+	}
+
+	return fd
+}
+
+func acceptPacket(socketFile *os.File, vm *bpf.VM, socketProtocol string, packetChannel chan ShadowPacket) error {
 	for {
 		// Read to buffer and create a frame
 		frame := make([]byte, mtu)
@@ -44,7 +58,7 @@ func acceptPacket(socketFile *os.File, vm *bpf.VM, socketProtocol string, packet
 			panic(fmt.Sprintf("failed to accept Ethernet frame: %v", err))
 		}
 		if dataBeginIndex > 0 {
-			assembledFrame := shadowPacket{
+			assembledFrame := ShadowPacket{
 				sourceAddr: frame[26:30],
 				sourceMac:  frame[6:12],
 
@@ -68,7 +82,7 @@ func createTCPVM() *bpf.VM {
 	}
 
 	// TCP Testing
-	testTCPPacket(TCPVM)
+	testTCPFilter(TCPVM)
 
 	return TCPVM
 }

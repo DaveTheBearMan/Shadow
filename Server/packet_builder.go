@@ -1,4 +1,4 @@
-package shacket
+package shadow
 
 import (
 	"log"
@@ -11,19 +11,6 @@ import (
 
 // long term storage
 var SrcIP net.IP
-
-// This will return the outbound IP address of your host
-func getOutboundIP() {
-	conn, err := net.Dial("udp", "8.8.8.8:80")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer conn.Close()
-
-	localAddr := conn.LocalAddr().(*net.UDPAddr)
-
-	SrcIP = localAddr.IP
-}
 
 // Returns the common port via IANA for a given layer 7 protocol, or a random port in the range 10000 -> 550000
 func layer7Protocol(protocol string) (port int) {
@@ -71,15 +58,18 @@ func CreatePacket(DstIP net.IP, l4Proto string, l7Proto string, data string) (pa
 		ComputeChecksums: true,
 		FixLengths:       true,
 	}
-	ip := &layers.IPv4{
-		SrcIP:    SrcIP,
-		DstIP:    DstIP,
-		Protocol: layers.IPProtocolTCP,
-	}
 
 	// Create either the TCP or UDP data
 	switch l4Proto {
 	case "TCP":
+		ip := &layers.IPv4{
+			Version:  4,
+			IHL:      5,
+			TTL:      64,
+			Protocol: layers.IPProtocolTCP,
+			SrcIP:    SrcIP,
+			DstIP:    DstIP,
+		}
 		TCPData := &layers.TCP{
 			SrcPort: layers.TCPPort(srcPort),
 			DstPort: layers.TCPPort(dstPort),
@@ -93,6 +83,14 @@ func CreatePacket(DstIP net.IP, l4Proto string, l7Proto string, data string) (pa
 			log.Fatal(err)
 		}
 	case "UDP":
+		ip := &layers.IPv4{
+			Version:  4,
+			IHL:      5,
+			TTL:      64,
+			Protocol: layers.IPProtocolUDP,
+			SrcIP:    SrcIP,
+			DstIP:    DstIP,
+		}
 		UDPData := &layers.UDP{
 			SrcPort: layers.UDPPort(srcPort),
 			DstPort: layers.UDPPort(dstPort),
