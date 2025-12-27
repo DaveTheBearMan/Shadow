@@ -38,10 +38,10 @@ func main() {
 				switch {
 				case resLen == 0:
 					fmt.Printf("<- Success\n")
-				case resLen <= 75:
-					fmt.Printf("<- %-70s ...\n", result)
+				case resLen >= 40:
+					fmt.Printf("<- %-36s ...\n", result)
 				default:
-					fmt.Printf("<- %-75s\n", result)
+					fmt.Printf("<- %-40s\n", result)
 				}
 			}
 		}

