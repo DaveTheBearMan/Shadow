@@ -20,8 +20,6 @@ func execCommand(command string) ([]byte, error) {
 }
 
 func main() {
-	SocketFile := shadow.CreateSendSocket()
-
 	switch os.Args[1] {
 	case "Client", "client", "--client":
 		packetChannel := shadow.Listen(context.Background())
@@ -48,6 +46,7 @@ func main() {
 			}
 		}
 	case "send", "exec", "write", "--send":
+		SocketFile := shadow.CreateSendSocket()
 		IpAddrStr := os.Args[2]
 		IpAddr, _, err := net.ParseCIDR(IpAddrStr)
 		if err != nil {
