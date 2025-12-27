@@ -34,7 +34,6 @@ func Listen(ctx context.Context) chan ShadowPacket {
 
 // Send takes a file descriptor, a destination address, and sends data after prefixing with [SHADOW]
 func Send(fd int, destination net.IP, l4Proto string, l7Proto string, Data string) error {
-	Data = "[SHADOW]" + Data
 	packetData := CreatePacket(destination, l4Proto, l7Proto, Data)
 	ipv4Address := destination.To4()
 	if ipv4Address == nil {
