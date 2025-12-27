@@ -154,7 +154,4 @@ func testTCPFilter(vm *bpf.VM) {
 	if outputFrameLen <= 0 {
 		panic("Test filter failed to pass any packets")
 	}
-	// fmt.Printf("Test data length %d\n", len(testData))
-	// fmt.Printf("Returned value %d\n", outputFrameLen)
-	// fmt.Printf("% x\n", testData)
 }

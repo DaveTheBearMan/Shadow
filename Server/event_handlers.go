@@ -46,28 +46,3 @@ func Send(fd int, destination net.IP, Data string) error {
 
 	return unix.Sendto(fd, packetData, 0, socketAddress)
 }
-
-// func clientTest() {
-// 	INETSocket := createINETSocket()
-// 	ipAddr, _, err := net.ParseCIDR("100.64.12.61/24")
-// 	if err != nil {
-// 		log.Panicf("Unable to parse CIDR, error: %v", err)
-// 	}
-
-// 	Send(INETSocket, ipAddr, "touch /home/dtbm/example.file")
-// }
-// func serverTest() {
-// 	ctx := context.Background()
-// 	socketChannel := Listen(ctx)
-
-// 	// Connection messages
-// 	fmt.Printf("  %-15s%-15s%-9s%-s\n", "SOURCE IP", "DEST IP", "PROTO", "DATA")
-// 	for packet := range socketChannel {
-// 		fmt.Printf("> %-15s%-15s%-9s%-s\n", packet.getSourceAddrStr(), packet.getDestAddrStr(), packet.proto, packet.data)
-
-// 		if len(packet.data) > 0 {
-// 			result := runCommand(string(packet.data))
-// 			fmt.Printf("< %-75s\n", result)
-// 		}
-// 	}
-// }
