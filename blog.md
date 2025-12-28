@@ -96,3 +96,5 @@ This is a good thing to see when you are trying to circumvent firewalls.
 
 Most of the protocols are self explanatory, or the comments cover which packets they will include.
 
+## GoLang Sockets
+In Go, there are wrapper functions to abstract the calls. For example, to generate our 
