@@ -202,7 +202,7 @@ func createCombinedFilter() []bpf.Instruction {
 
 		// Skip over TCP header calculations if we are working with UDP
 		bpf.LoadAbsolute{Off: ipProtoOff, Size: ipProtoSize},
-		bpf.JumpIf{Cond: bpf.JumpEqual, Val: protoUDP, SkipTrue: 7}, // If it is not UDP, we know safely that it must be TCP BOA
+		bpf.JumpIf{Cond: bpf.JumpEqual, Val: protoUDP, SkipTrue: 8}, // If it is not UDP, we know safely that it must be TCP BOA
 
 		// Calculate TCP Header Offset
 		bpf.LoadIndirect{Off: 12, Size: 1},                 // First 4 bits are the data offset. Trailing 4 are reserved
@@ -218,6 +218,7 @@ func createCombinedFilter() []bpf.Instruction {
 		bpf.LoadConstant{Dst: bpf.RegA, Val: 8}, // UDP has fixed headerlen of 8
 		bpf.ALUOpX{Op: bpf.ALUOpAdd},
 		bpf.TAX{}, // Move offset into RegX from RegA
+		// TODO: UDP is not working, but TCP is. This tells me that this is technically possible. I need to debug where this ends up!
 
 		// Read for shadow magic bytes at the calculated length
 		bpf.LoadIndirect{Off: 0, Size: 4}, // This will load from either the end of TCP header or end of IP header (UDP)
