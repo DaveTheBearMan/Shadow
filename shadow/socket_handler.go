@@ -58,13 +58,21 @@ func acceptPacket(socketFile *os.File, vm *bpf.VM, socketProtocol string, packet
 			panic(fmt.Sprintf("failed to accept Ethernet frame: %v", err))
 		}
 		if dataBeginIndex > 0 {
+			ipProto := socketProtocol
+			switch frame[23] {
+			case 0x06:
+				ipProto = "TCP"
+			case 0x11:
+				ipProto = "UDP"
+			}
+			
 			assembledFrame := ShadowPacket{
 				sourceAddr: frame[26:30],
 				sourceMac:  frame[6:12],
 
 				destAddr: frame[30:34],
 				destMac:  frame[0:6],
-				proto:    socketProtocol,
+				proto:    ipProto,
 
 				data: bytes.Trim(frame[dataBeginIndex:], "\x00"),
 			}
