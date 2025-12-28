@@ -218,7 +218,6 @@ func createCombinedFilter() []bpf.Instruction {
 		bpf.LoadConstant{Dst: bpf.RegA, Val: 8}, // UDP has fixed headerlen of 8
 		bpf.ALUOpX{Op: bpf.ALUOpAdd},
 		bpf.TAX{}, // Move offset into RegX from RegA
-		// TODO: UDP is not working, but TCP is. This tells me that this is technically possible. I need to debug where this ends up!
 
 		// Read for shadow magic bytes at the calculated length
 		bpf.LoadIndirect{Off: 0, Size: 4}, // This will load from either the end of TCP header or end of IP header (UDP)

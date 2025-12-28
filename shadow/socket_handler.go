@@ -65,7 +65,7 @@ func acceptPacket(socketFile *os.File, vm *bpf.VM, socketProtocol string, packet
 			case 0x11:
 				ipProto = "UDP"
 			}
-			
+
 			assembledFrame := ShadowPacket{
 				sourceAddr: frame[26:30],
 				sourceMac:  frame[6:12],
@@ -106,4 +106,17 @@ func createUDPVM() *bpf.VM {
 	// No testing for UDP yet
 
 	return UDPVM
+}
+
+func createCombinedVM() *bpf.VM {
+	// Create TCP BPF VM
+	CombinedFilter := createCombinedFilter()
+	CombinedVM, err := bpf.NewVM(CombinedFilter)
+	if err != nil {
+		panic(fmt.Sprintf("failed to load TCP BPF program: %v", err))
+	}
+
+	// No testing for UDP yet
+
+	return CombinedVM
 }
