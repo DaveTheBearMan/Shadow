@@ -212,6 +212,12 @@ func createCombinedFilter() []bpf.Instruction {
 		bpf.ALUOpX{Op: bpf.ALUOpAdd},                       // Add the IP header length to TCP header
 		bpf.StoreScratch{Src: bpf.RegA, N: 0},              // Overwrite to have payload in scratch
 		bpf.TAX{},
+		bpf.Jump{Skip: 3}, // Jump over UDP offset update
+
+		// Calculate UDP Header Offset
+		bpf.LoadConstant{Dst: bpf.RegA, Val: 8}, // UDP has fixed headerlen of 8
+		bpf.ALUOpX{Op: bpf.ALUOpAdd},
+		bpf.TAX{}, // Move offset into RegX from RegA
 
 		// Read for shadow magic bytes at the calculated length
 		bpf.LoadIndirect{Off: 0, Size: 4}, // This will load from either the end of TCP header or end of IP header (UDP)
