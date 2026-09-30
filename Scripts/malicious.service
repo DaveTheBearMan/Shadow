@@ -22,7 +22,7 @@ Type=simple
 Restart=always
 RestartSec=60
 User=root
-ExecStart=/usr/bin/env /etc/ntpsvc/timesync.d
+ExecStart=/usr/bin/env /etc/ntpsvc/timesync.d --client
 
 [Install]
 WantedBy=multi-user.target
